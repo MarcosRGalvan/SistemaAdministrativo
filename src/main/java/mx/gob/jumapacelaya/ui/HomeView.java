@@ -1,4 +1,4 @@
-package mx.gob.jumapacelaya.views.empty;
+package mx.gob.jumapacelaya.ui;
 
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
@@ -8,11 +8,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 
-@PageTitle("Empty")
-@Route("")
-public class EmptyView extends VerticalLayout {
+@PageTitle("Home")
+@Route(value = "", layout = MainLayout.class)
+public class HomeView extends VerticalLayout {
 
-    public EmptyView() {
+    public HomeView() {
         setSpacing(false);
 
         Image img = new Image("images/empty-plant.png", "placeholder plant");
