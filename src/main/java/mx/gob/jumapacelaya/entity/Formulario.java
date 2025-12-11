@@ -9,22 +9,24 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@AllArgsConstructor
-@NoArgsConstructor
+@Getter @Setter
 @Entity
 @Table(name = "FORMULARIOS", schema = "ADMIN")
 public class Formulario {
 
     @Id
-    @Setter @Getter
+    @Column(name = "FORMULARIOID")
     private Long formularioid;
-    @Getter @Setter
+
+    @Column(name = "DESCRIPCION")
     private String descripcion;
-    @Getter @Setter
+
+    @Column(name = "CLASE")
     private String clase;
-    @Getter @Setter
+
+    @Column(name = "PARAMETROS")
     private String parametros;
-    @Getter @Setter
+
     @Column(columnDefinition = "CHAR")
     private String estado;
 
