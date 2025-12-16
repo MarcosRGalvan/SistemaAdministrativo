@@ -1,0 +1,41 @@
+:root {
+    --lumo-primary-color: #691B31;
+    --lumo-primary-text-color: #BC955B;
+    --lumo-border-radius: 15px;
+    --lumo-font-family: 'Montserrat';
+}
+
+vaadin-button {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(105, 27, 49, 0.28), 0 2px 8px rgba(0, 0, 0, 0.13);
+    transition: box-shadow 0.2s, border 0.2s;
+}
+
+vaadin-button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(240,223,223,0.2);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+vaadin-button:hover::after {
+    box-shadow: 0 16px 36px rgba(105,27,49,0.35), 0 4px 16px rgba(0,0,0,0.18);
+    border-color: #BC955B;
+    opacity: 1;
+}
+
+.toolbar {
+    padding-left: 20px;
+    margin: 0;
+    padding-top: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    height: 60px;
+}
+
+.grid {
+    margin: 10px;
+}

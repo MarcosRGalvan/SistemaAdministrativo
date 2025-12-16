@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -17,6 +18,7 @@ import com.vaadin.flow.router.Route;
 import mx.gob.jumapacelaya.dto.FormularioDTO;
 import mx.gob.jumapacelaya.repositories.FormularioRepository;
 import mx.gob.jumapacelaya.ui.MainLayout;
+import mx.gob.jumapacelaya.ui.components.ToolbarComponent;
 
 import java.util.List;
 import java.util.Locale;
@@ -41,10 +43,19 @@ public class FormulariosView extends VerticalLayout {
         this.formularioRepository = formularioRepository;
         addClassName("formularios-view");
         setSizeFull();
+        setPadding(false);
+        add(createToolbar());
 
         configureGrid();
         add(grid);
         updateList();
+    }
+
+    private Component createToolbar() {
+        Button btnNuevoForm = new Button(VaadinIcon.PLUS.create());
+        btnNuevoForm.setTooltipText("Agregar nuevo formulario");
+
+        return new ToolbarComponent(btnNuevoForm);
     }
 
     private void updateList() {
@@ -53,6 +64,7 @@ public class FormulariosView extends VerticalLayout {
     }
 
     private void configureGrid() {
+        grid.addClassNames("grid");
         grid.removeAllColumns();
 
         Grid.Column<FormularioDTO> formCol =
@@ -69,6 +81,8 @@ public class FormulariosView extends VerticalLayout {
                         .setFlexGrow(0)
                         .setWidth("150px")
                         .setFrozenToEnd(true);
+
+        grid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT, GridVariant.LUMO_ROW_STRIPES);
 
         // Configuración de los filtros en la cabecera
         HeaderRow filterRow = grid.appendHeaderRow();

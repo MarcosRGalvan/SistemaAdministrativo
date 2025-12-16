@@ -17,6 +17,7 @@ import mx.gob.jumapacelaya.dto.MenuDetalleDTO;
 import mx.gob.jumapacelaya.entity.MenuItem;
 import mx.gob.jumapacelaya.repositories.MenuItemRepository;
 import mx.gob.jumapacelaya.ui.MainLayout;
+import mx.gob.jumapacelaya.ui.components.ToolbarComponent;
 
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -39,10 +40,22 @@ public class MenusView extends VerticalLayout {
         this.menuItemRepository = menuItemRepository;
         addClassName("menu-view");
         setSizeFull();
+        setSpacing(true);
+        setPadding(false);
+
+        add(createToolbar());
 
         conrfigureGrid();
         add(grid);
         updateList();
+    }
+
+    private Component createToolbar() {
+        Button btnNuevoMenu = new Button(VaadinIcon.PLUS.create());
+        btnNuevoMenu.setTooltipText("Agregar nuevo menu");
+
+
+        return new ToolbarComponent(btnNuevoMenu);
     }
 
     private void updateList() {
@@ -52,6 +65,7 @@ public class MenusView extends VerticalLayout {
 
     private void conrfigureGrid() {
         grid.removeAllColumns();
+        grid.addClassNames("grid");
 
         Grid.Column<MenuDetalleDTO> menuCol =
             grid.addColumn(MenuDetalleDTO::getDescripcion).setHeader("Menú").setAutoWidth(true);
