@@ -33,7 +33,7 @@ public class MainLayout extends AppLayout {
                 .collect(Collectors.groupingBy(item -> item.getPadreid() == null ? 0L : item.getPadreid()));
 
         DrawerToggle toggle = new DrawerToggle();
-        H1 title = new H1("JUMAPACELAYA");
+        H1 title = new H1("MyAPP");
         title.getStyle()
                 .set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");

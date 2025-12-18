@@ -1,9 +1,6 @@
 package mx.gob.jumapacelaya.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +12,7 @@ import lombok.Setter;
 public class Formulario {
 
     @Id
-    @Column(name = "FORMULARIOID")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long formularioid;
 
     @Column(name = "DESCRIPCION")

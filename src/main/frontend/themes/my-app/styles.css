@@ -28,6 +28,7 @@ vaadin-button:hover::after {
     opacity: 1;
 }
 
+
 .toolbar {
     padding-left: 20px;
     margin: 0;

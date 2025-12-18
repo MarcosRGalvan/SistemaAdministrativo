@@ -2,10 +2,15 @@ package mx.gob.jumapacelaya.ui.administracion;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -14,10 +19,13 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import mx.gob.jumapacelaya.dto.MenuDetalleDTO;
+import mx.gob.jumapacelaya.entity.Formulario;
 import mx.gob.jumapacelaya.entity.MenuItem;
+import mx.gob.jumapacelaya.repositories.FormularioRepository;
 import mx.gob.jumapacelaya.repositories.MenuItemRepository;
 import mx.gob.jumapacelaya.ui.MainLayout;
 import mx.gob.jumapacelaya.ui.components.ToolbarComponent;
+import org.aspectj.weaver.ast.Not;
 
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -27,6 +35,7 @@ import java.util.function.Consumer;
 public class MenusView extends VerticalLayout {
 
     private final MenuItemRepository menuItemRepository;
+    private final FormularioRepository formularioRepository;
     private final Grid<MenuDetalleDTO> grid = new Grid<>(MenuDetalleDTO.class, false);
     private ListDataProvider<MenuDetalleDTO> dataProvider;
 
@@ -35,27 +44,184 @@ public class MenusView extends VerticalLayout {
     private final TextField formularioFilter = new TextField();
     private final TextField padreFilter = new TextField();
     private final TextField tipoFilter = new TextField();
+    private final Button btnNuevoMenu = new Button(VaadinIcon.PLUS.create());
+    private final Dialog addMenuDialog = new Dialog();
+    private TextField txtNomMenu = new TextField("Nombre:");
+    private ComboBox<Formulario> cmbFormularios = new ComboBox<>("Formulario:");
+    private ComboBox<MenuItem> cmbMenuPadre = new ComboBox<>("Padre:");
+    private ComboBox<String> cmbTipoMenu = new ComboBox<>("Tipo:");
+    private Button btnGuardarMenu = new Button("Guardar");
+    private Checkbox checkbox = new Checkbox("Activo:");
+    private TextField txtOrden = new TextField("Orden:");
+    private Long editingMenu = null;
 
-    public MenusView(MenuItemRepository menuItemRepository) {
+    public MenusView(MenuItemRepository menuItemRepository, FormularioRepository formularioRepository) {
         this.menuItemRepository = menuItemRepository;
+        this.formularioRepository = formularioRepository;
         addClassName("menu-view");
         setSizeFull();
         setSpacing(true);
         setPadding(false);
 
-        add(createToolbar());
-
+        configureComboBoxes();
         conrfigureGrid();
-        add(grid);
+
+        add(createToolbar(), grid);
         updateList();
     }
 
     private Component createToolbar() {
-        Button btnNuevoMenu = new Button(VaadinIcon.PLUS.create());
+        /* --------- AGREGAR NUEVO MENÚ ---------- */
+        txtNomMenu.setRequired(true);
+        txtOrden.setRequired(true);
+        txtOrden.setValue("0");
+        txtOrden.setWidth("20%");
+        cmbTipoMenu.setWidth("20%");
+        checkbox.setValue(true);
+
+        HorizontalLayout combosLyt = new HorizontalLayout();
+        combosLyt.setWidthFull();
+        combosLyt.add(cmbFormularios, cmbMenuPadre);
+        HorizontalLayout btnsLyt = new HorizontalLayout();
+        btnsLyt.setAlignItems(Alignment.BASELINE);
+        btnsLyt.setJustifyContentMode(JustifyContentMode.START);
+        btnsLyt.add(txtOrden, cmbTipoMenu, checkbox);
+        HorizontalLayout btnGuardarMenuLyt = new HorizontalLayout(btnGuardarMenu);
+        btnGuardarMenuLyt.setWidthFull();
+        btnGuardarMenuLyt.setJustifyContentMode(JustifyContentMode.END);
+        btnGuardarMenu.addClickListener(e -> saveMenu());
+        btnGuardarMenu.setThemeName("primary");
+        VerticalLayout layout = new VerticalLayout(txtNomMenu, combosLyt, btnsLyt, btnGuardarMenuLyt);
+        layout.setSpacing(false);
+        addMenuDialog.setHeaderTitle("Agregar nuevo menú");
+        addMenuDialog.add(layout);
+
+
         btnNuevoMenu.setTooltipText("Agregar nuevo menu");
-
-
+        btnNuevoMenu.addClickListener(e -> addMenuDialog.open());
         return new ToolbarComponent(btnNuevoMenu);
+    }
+
+    private void configureComboBoxes() {
+        cmbFormularios.setItemLabelGenerator(Formulario::getDescripcion);
+        cmbFormularios.setItems(formularioRepository.findAll());
+
+        cmbMenuPadre.setItemLabelGenerator(MenuItem::getDescripcion);
+        cmbMenuPadre.setItems(menuItemRepository.findAll());
+
+        cmbTipoMenu.setItems("M", "S");
+        cmbTipoMenu.setValue("M");
+    }
+
+    private void saveMenu() {
+        if (txtNomMenu.isEmpty() || cmbTipoMenu.isEmpty()) {
+            Notification.show("Por favor, llene los campos requeridos.", 3000, Notification.Position.TOP_CENTER);
+            return;
+        }
+
+        MenuItem menu;
+        if (this.editingMenu != null) {
+            menu = menuItemRepository.findById(editingMenu).orElse(new MenuItem());
+        } else {
+            menu = new MenuItem();
+        }
+
+        try {
+            menu.setDescripcion(txtNomMenu.getValue().toUpperCase());
+            menu.setTipo(cmbTipoMenu.getValue());
+            menu.setEstado(checkbox.getValue() ? "A" : "I");
+
+            Long orden = txtOrden.getValue().isEmpty() ? 0L : Long.parseLong(txtOrden.getValue());
+            menu.setOrdenmenu(orden);
+
+            if (cmbFormularios.getValue() != null) {
+                menu.setFormularioid(cmbFormularios.getValue().getFormularioid());
+            } else {
+                menu.setFormularioid(null);
+            }
+
+            if (cmbMenuPadre.getValue() != null) {
+                menu.setPadreid(cmbMenuPadre.getValue().getMenuid());
+            } else {
+                menu.setPadreid(null);
+            }
+
+            menuItemRepository.save(menu);
+
+            Notification.show("¡Menú guardado exitosamente!", 3000, Notification.Position.MIDDLE)
+                    .addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+            this.editingMenu = null;
+            addMenuDialog.close();
+            updateList();
+            clearForm();
+        } catch (NumberFormatException e) {
+            Notification.show("El campo 'Orden' debe ser un número válido.");
+        } catch (Exception ex) {
+            Notification.show("Error al guardar: " + ex.getMessage());
+        }
+    }
+
+    private void deleteMenu(MenuDetalleDTO dto) {
+        ConfirmDialog dialog = new ConfirmDialog();
+        dialog.setHeader("Eliminar Menú");
+        dialog.setText("¿Está seguro que quiere eliminar el menú?");
+
+        dialog.setCancelable(true);
+        dialog.setCancelText("Cancelar");
+
+        dialog.setConfirmText("Eliminar");
+        dialog.addConfirmListener(event -> {
+            if (dto.getMenuid() == null) return;
+            try {
+                menuItemRepository.deleteById(dto.getMenuid().longValue());
+                Notification.show("Menú eliminado exitosamente.", 3000, Notification.Position.TOP_CENTER)
+                        .addThemeVariants(NotificationVariant.LUMO_WARNING);
+                updateList();
+            } catch (Exception e) {
+                Notification.show("No se puede eliminar: el registro está siendo usado.", 3000, Notification.Position.TOP_CENTER)
+                        .addThemeVariants(NotificationVariant.LUMO_ERROR);
+            }
+        });
+        dialog.open();
+    }
+
+    private void editMenu(MenuDetalleDTO dto) {
+        MenuItem menu = menuItemRepository.findById(dto.getMenuid().longValue()).orElse(null);
+
+        if (menu != null) {
+            this.editingMenu = menu.getMenuid();
+
+            txtNomMenu.setValue(menu.getDescripcion());
+            txtOrden.setValue(String.valueOf(menu.getOrdenmenu()));
+            cmbTipoMenu.setValue(menu.getTipo());
+            checkbox.setValue("A".equals(menu.getEstado()));
+
+            if (menu.getFormularioid() != null) {
+                formularioRepository.findById(menu.getFormularioid())
+                        .ifPresent(cmbFormularios::setValue);
+            } else {
+                cmbFormularios.clear();
+            }
+            if (menu.getPadreid() != null) {
+                menuItemRepository.findById(menu.getPadreid())
+                        .ifPresent(cmbMenuPadre::setValue);
+            } else {
+                cmbMenuPadre.clear();
+            }
+
+            addMenuDialog.setHeaderTitle("Editar menú: " + menu.getDescripcion());
+            addMenuDialog.open();
+        }
+    }
+
+    private void clearForm() {
+        txtNomMenu.clear();
+        cmbFormularios.clear();
+        cmbMenuPadre.clear();
+        cmbTipoMenu.clear();
+        checkbox.setValue(true);
+        txtOrden.clear();
     }
 
     private void updateList() {
@@ -133,11 +299,11 @@ public class MenusView extends VerticalLayout {
     private Component createActionsBtn(MenuDetalleDTO menuDetalleDTO) {
         Button editButton = new Button(VaadinIcon.PENCIL.create());
         //editButton.setThemeName("primary small");
-        editButton.addClickListener(e -> Notification.show("Editar " + menuDetalleDTO.getDescripcion()));
+        editButton.addClickListener(e -> editMenu(menuDetalleDTO));
 
         Button deleteButton = new Button(VaadinIcon.TRASH.create());
         //deleteButton.setThemeName("small");
-        deleteButton.addClickListener(e -> Notification.show("Eliminar " + menuDetalleDTO.getDescripcion()));
+        deleteButton.addClickListener(e -> deleteMenu(menuDetalleDTO));
 
         HorizontalLayout layout = new HorizontalLayout(editButton,deleteButton);
         layout.setSpacing(true);
