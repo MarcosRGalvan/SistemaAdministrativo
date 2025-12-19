@@ -80,12 +80,22 @@ public class MainLayout extends AppLayout {
 
         if (isComponent) {
             @SuppressWarnings("unchecked")
-            Class<? extends Component> componentClass =
-                    (Class<? extends Component>) targetClass;
-
+            Class<? extends Component> componentClass = (Class<? extends Component>) targetClass;
             item = new SideNavItem(currentItem.getDescripcion(), componentClass);
         } else {
             item = new SideNavItem(currentItem.getDescripcion());
+        }
+
+        String nombreIcono = currentItem.getIcono();
+        if (nombreIcono != null && !nombreIcono.isEmpty()) {
+            try {
+                VaadinIcon vIcon = VaadinIcon.valueOf(nombreIcono.toUpperCase());
+                item.setPrefixComponent(vIcon.create());
+            } catch (IllegalArgumentException e) {
+                item.setPrefixComponent(VaadinIcon.QUESTION_CIRCLE.create());
+            }
+        } else {
+            item.setPrefixComponent(VaadinIcon.OPTION_A.create());
         }
 
         List<MenuItem> children = menuTree.get(currentItem.getMenuid());

@@ -78,6 +78,8 @@ public class MenusView extends VerticalLayout {
         txtOrden.setWidth("20%");
         cmbTipoMenu.setWidth("20%");
         checkbox.setValue(true);
+        cmbFormularios.setWidthFull();
+        cmbMenuPadre.setWidthFull();
 
         HorizontalLayout combosLyt = new HorizontalLayout();
         combosLyt.setWidthFull();

@@ -21,6 +21,7 @@ public class MenuItem {
     private Long ordenmenu;
     @Column(columnDefinition = "CHAR")
     private String tipo;
+    private String icono;
 
     public Long getMenuid() {
         return menuid;
@@ -76,5 +77,13 @@ public class MenuItem {
 
     public void setTipo(String tipo) {
         this.tipo = tipo;
+    }
+
+    public String getIcono() {
+        return icono;
+    }
+
+    public void setIcono(String icono) {
+        this.icono = icono;
     }
 }

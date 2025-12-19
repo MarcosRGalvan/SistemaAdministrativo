@@ -28,6 +28,12 @@ vaadin-button:hover::after {
     opacity: 1;
 }
 
+vaadin-side-nav-item [slot="prefix"] {
+    color: var(--lumo-primary-text-color);
+    width: var(--lumo-icon-size-m);
+    height: var(--lumo-icon-size-m);
+}
+
 
 .toolbar {
     padding-left: 20px;
