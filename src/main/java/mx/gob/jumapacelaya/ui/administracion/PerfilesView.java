@@ -17,6 +17,7 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.RolesAllowed;
 import mx.gob.jumapacelaya.dto.FormularioDTO;
 import mx.gob.jumapacelaya.dto.PerfilDTO;
 import mx.gob.jumapacelaya.entity.Perfiles;
@@ -30,6 +31,7 @@ import java.util.function.Consumer;
 
 @PageTitle("Perfiles")
 @Route(value = "perfiles", layout = MainLayout.class)
+@RolesAllowed( value = "ADMIN")
 public class PerfilesView extends VerticalLayout {
 
     private final PerfilesRepository perfilesRepository;

@@ -12,12 +12,14 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
+import jakarta.annotation.security.RolesAllowed;
 import mx.gob.jumapacelaya.ui.MainLayout;
 
 import java.util.List;
 
 @PageTitle("Configuración del Sistema")
 @Route(value = "configsistema", layout = MainLayout.class)
+@RolesAllowed( value = "ADMIN")
 public class ConfiguracionDelSistema extends VerticalLayout {
 
     private static final String THEME_SESSION_KEY = "userTheme";

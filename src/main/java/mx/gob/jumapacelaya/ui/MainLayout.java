@@ -3,8 +3,13 @@ package mx.gob.jumapacelaya.ui;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.component.tabs.Tab;
@@ -13,6 +18,7 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import mx.gob.jumapacelaya.entity.MenuItem;
+import mx.gob.jumapacelaya.security.SecurityService;
 import mx.gob.jumapacelaya.services.MenuService;
 
 import java.util.List;
@@ -26,23 +32,55 @@ public class MainLayout extends AppLayout {
 
     private final MenuService menuService;
     private final Map<Long, List<MenuItem>> menuTree;
+    private SecurityService securityService;
 
-    public MainLayout(MenuService menuService) {
+    public MainLayout(MenuService menuService, SecurityService securityService) {
+        this.securityService = securityService;
         this.menuService = menuService;
         this.menuTree = menuService.getMenuItems().stream()
                 .collect(Collectors.groupingBy(item -> item.getPadreid() == null ? 0L : item.getPadreid()));
 
+
+        addToNavbar(createHeader());
+
+        SideNav nav = createPrimaryNavigation();
+        addToDrawer(nav);
+    }
+
+    private Component createHeader() {
         DrawerToggle toggle = new DrawerToggle();
-        H1 title = new H1("MyAPP");
+
+        H1 title = new H1("My App");
         title.getStyle()
                 .set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
 
-        addToNavbar(toggle, title);
+        HorizontalLayout userArea = new HorizontalLayout();
+        userArea.setAlignItems(FlexComponent.Alignment.END);
+        userArea.setSpacing(true);
 
-        SideNav nav = createPrimaryNavigation();
+        if (securityService.getAuthenticatedUser() != null) {
+            String username = securityService.getAuthenticatedUser().getUsername();
 
-        addToDrawer(nav);
+            Avatar avatar = new Avatar();
+            avatar.getStyle().set("cursor", "pointer");
+
+            MenuBar menuBar = new MenuBar();
+            menuBar.setThemeName("tertiary-inline");
+
+            com.vaadin.flow.component.contextmenu.MenuItem userItem = menuBar.addItem(avatar);
+            userItem.getSubMenu().addItem("Cerrar Sesión", e -> securityService.logout());
+
+            userArea.add(menuBar);
+        }
+
+        HorizontalLayout header = new HorizontalLayout(toggle, title, userArea);
+        header.expand(title);
+        header.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
+        header.setWidthFull();
+        header.getStyle().set("padding", "0 20px 0 10px");
+
+        return header;
     }
 
     private SideNav createPrimaryNavigation() {

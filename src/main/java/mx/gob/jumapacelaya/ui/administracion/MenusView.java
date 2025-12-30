@@ -18,6 +18,7 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.RolesAllowed;
 import mx.gob.jumapacelaya.dto.MenuDetalleDTO;
 import mx.gob.jumapacelaya.entity.Formulario;
 import mx.gob.jumapacelaya.entity.MenuItem;
@@ -32,6 +33,7 @@ import java.util.function.Consumer;
 
 @PageTitle("Menús")
 @Route(value = "menus", layout = MainLayout.class)
+@RolesAllowed("ADMIN")
 public class MenusView extends VerticalLayout {
 
     private final MenuItemRepository menuItemRepository;
