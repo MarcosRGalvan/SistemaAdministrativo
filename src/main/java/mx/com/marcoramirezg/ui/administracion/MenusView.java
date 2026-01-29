@@ -65,6 +65,7 @@ public class MenusView extends VerticalLayout {
         setPadding(false);
 
         configureComboBoxes();
+        configureAddMenuDialog();
         conrfigureGrid();
 
         add(createToolbar(), grid);
@@ -72,36 +73,8 @@ public class MenusView extends VerticalLayout {
     }
 
     private Component createToolbar() {
-        /* --------- AGREGAR NUEVO MENÚ ---------- */
-        txtNomMenu.setRequired(true);
-        txtOrden.setRequired(true);
-        txtOrden.setValue("0");
-        txtOrden.setWidth("20%");
-        cmbTipoMenu.setWidth("20%");
-        checkbox.setValue(true);
-        cmbFormularios.setWidthFull();
-        cmbMenuPadre.setWidthFull();
-
-        HorizontalLayout combosLyt = new HorizontalLayout();
-        combosLyt.setWidthFull();
-        combosLyt.add(cmbFormularios, cmbMenuPadre);
-        HorizontalLayout btnsLyt = new HorizontalLayout();
-        btnsLyt.setAlignItems(Alignment.BASELINE);
-        btnsLyt.setJustifyContentMode(JustifyContentMode.START);
-        btnsLyt.add(txtOrden, cmbTipoMenu, checkbox);
-        HorizontalLayout btnGuardarMenuLyt = new HorizontalLayout(btnGuardarMenu);
-        btnGuardarMenuLyt.setWidthFull();
-        btnGuardarMenuLyt.setJustifyContentMode(JustifyContentMode.END);
-        btnGuardarMenu.addClickListener(e -> saveMenu());
-        btnGuardarMenu.setThemeName("primary");
-        VerticalLayout layout = new VerticalLayout(txtNomMenu, combosLyt, btnsLyt, btnGuardarMenuLyt);
-        layout.setSpacing(false);
-        addMenuDialog.setHeaderTitle("Agregar nuevo menú");
-        addMenuDialog.add(layout);
-
-
-        btnNuevoMenu.setTooltipText("Agregar nuevo menu");
-        btnNuevoMenu.addClickListener(e -> addMenuDialog.open());
+        btnNuevoMenu.setTooltipText("Agregar nuevo menú");
+        btnNuevoMenu.addClickListener(e -> openAddMenuDialog());
         return new ToolbarComponent(btnNuevoMenu);
     }
 
@@ -326,4 +299,47 @@ public class MenusView extends VerticalLayout {
         layout.setMargin(false);
         return layout;
     }
+
+    private void configureAddMenuDialog() {
+        txtNomMenu.setRequired(true);
+        txtOrden.setRequired(true);
+        txtOrden.setValue("0");
+        txtOrden.setWidth("20%");
+        cmbTipoMenu.setWidth("20%");
+        checkbox.setValue(true);
+        cmbFormularios.setWidthFull();
+        cmbMenuPadre.setWidthFull();
+
+        HorizontalLayout combosLyt = new HorizontalLayout(cmbFormularios, cmbMenuPadre);
+        combosLyt.setWidthFull();
+
+        HorizontalLayout btnsLyt = new HorizontalLayout(txtOrden, cmbTipoMenu, checkbox);
+        btnsLyt.setAlignItems(Alignment.BASELINE);
+
+        btnGuardarMenu.addClickListener(e -> saveMenu());
+        btnGuardarMenu.setThemeName("primary");
+
+        HorizontalLayout footer = new HorizontalLayout(btnGuardarMenu);
+        footer.setWidthFull();
+        footer.setJustifyContentMode(JustifyContentMode.END);
+
+        VerticalLayout layout = new VerticalLayout(
+                txtNomMenu,
+                combosLyt,
+                btnsLyt,
+                footer
+        );
+        layout.setSpacing(false);
+
+        addMenuDialog.setHeaderTitle("Agregar nuevo menú");
+        addMenuDialog.add(layout);
+    }
+
+    private void openAddMenuDialog() {
+        clearForm();
+        editingMenu = null;
+        addMenuDialog.setHeaderTitle("Agregar nuevo menú");
+        addMenuDialog.open();
+    }
+
 }

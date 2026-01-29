@@ -123,7 +123,7 @@ public class MainLayout extends AppLayout {
         String nombreIcono = currentItem.getIcono();
         if (nombreIcono != null && !nombreIcono.isEmpty()) {
             try {
-                VaadinIcon vIcon = VaadinIcon.valueOf(nombreIcono.toUpperCase());
+                VaadinIcon vIcon = VaadinIcon.valueOf(nombreIcono.toUpperCase().replace("-","_"));
                 item.setPrefixComponent(vIcon.create());
             } catch (IllegalArgumentException e) {
                 item.setPrefixComponent(VaadinIcon.QUESTION_CIRCLE.create());
