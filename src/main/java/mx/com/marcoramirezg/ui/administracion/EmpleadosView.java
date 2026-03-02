@@ -4,10 +4,10 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.charts.model.Dial;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -27,7 +27,6 @@ import mx.com.marcoramirezg.ui.components.ToolbarComponent;
 import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 
 @PageTitle("Empleados")
 @Route(value = "empleados", layout = MainLayout.class)
@@ -46,6 +45,8 @@ public class EmpleadosView extends VerticalLayout {
     private Button btnListaUsuarios;
     private Button btnLimpiar;
     private TextField txtEmail;
+    private H2 label;
+    private Button btnBuscar;
 
     private static final DateFormat FORMATO_FECHA = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -69,22 +70,25 @@ public class EmpleadosView extends VerticalLayout {
     /* ---------------- TOOLBAR ---------------- */
 
     private Component createToolbar() {
-        btnListaUsuarios = new Button("Buscar", VaadinIcon.USER.create());
+        btnListaUsuarios = new Button("Lista empleados", VaadinIcon.USER.create());
         btnListaUsuarios.addClickListener(e -> mostrarListaEmpleados());
 
         btnLimpiar = new Button("Limpiar", VaadinIcon.ERASER.create());
         btnLimpiar.addClickListener(e -> limpiarFormulario());
 
-        return new ToolbarComponent(btnListaUsuarios,btnLimpiar);
+        btnBuscar = new Button("Buscar", VaadinIcon.SEARCH.create());
+        btnBuscar.addClickListener(e -> buscarEmpleado());
+
+        return new ToolbarComponent(btnBuscar,btnLimpiar,btnListaUsuarios);
     }
 
     /* ---------------- CONTENIDO ---------------- */
 
     private Component createContent() {
         VerticalLayout content = new VerticalLayout();
-        content.setPadding(true);
-        content.setMargin(true);
-        content.setSpacing(true);
+        //content.setPadding(true);
+        //content.setMargin(true);
+        //content.setSpacing(true);
 
         content.add(createForm());
 
@@ -133,6 +137,7 @@ public class EmpleadosView extends VerticalLayout {
         deptoLyt.setWidthFull();
 
         VerticalLayout card = new VerticalLayout(
+                label = new H2("Buscar empleados"),
                 numemplLyt,
                 nombreLyt,
                 apellidosLyt,
@@ -283,6 +288,7 @@ public class EmpleadosView extends VerticalLayout {
                         .setHeader("Jefe")
                                 .setAutoWidth(true);
 
+        /*
         grid.addColumn(EmpleadoDTO::getFechaingreso)
                         .setHeader("Fecha Ingreso")
                                 .setAutoWidth(true);
@@ -294,6 +300,7 @@ public class EmpleadosView extends VerticalLayout {
         grid.addColumn(EmpleadoDTO::getTitulo)
                         .setHeader("Titulo")
                                 .setAutoWidth(true);
+        */
 
         grid.setSizeFull();
         grid.setItems(empleadoService.findAll());

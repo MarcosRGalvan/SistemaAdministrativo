@@ -21,203 +21,165 @@ import java.util.List;
 @RolesAllowed( value = "ADMIN")
 public class ConfiguracionDelSistema extends VerticalLayout {
 
-    private static final String THEME_SESSION_KEY = "userTheme";
     private static final String THEME_LOCALSTORAGE_KEY = "appThemePreference";
+    private boolean initializing = true;
 
-    private final List<ColorOption> primaryTextColorOptions = List.of(
-            new ColorOption("Color 1", "#A02142"),
-            new ColorOption("Color 2", "#691B31"),
-            new ColorOption("Color 3", "#BC955B"),
-            new ColorOption("Color 4", "#DDC9A3"),
-            new ColorOption("Color 5", "#6F7271")
+    private final List<ColorOptions> primaryTextColorOptions = List.of(
+            new ColorOptions("Big Dip O´Ruby", "#A02142"),
+            new ColorOptions("Claret", "#691B31"),
+            new ColorOptions("Aztec Gold", "#BC955B"),
+            new ColorOptions("Lion", "#DDC9A3"),
+            new ColorOptions("Nickel", "#6F7271")
     );
 
-    private final List<ColorOption> primaryColorOptions = List.of(
-            new ColorOption("Color 1", "#A02142"),
-            new ColorOption("Color 2", "#691B31"),
-            new ColorOption("Color 3", "#BC955B"),
-            new ColorOption("Color 4", "#DDC9A3"),
-            new ColorOption("Color 5", "#6F7271")
+    private final List<ColorOptions> primaryColorOptions = List.of(
+            new ColorOptions("Big Dip O´Ruby", "#A02142"),
+            new ColorOptions("Claret", "#691B31"),
+            new ColorOptions("Aztec Gold", "#BC955B"),
+            new ColorOptions("Lion", "#DDC9A3"),
+            new ColorOptions("Nickel", "#6F7271")
     );
 
     public ConfiguracionDelSistema() {
         setSpacing(true);
         add(new H2("⚙\uFE0F Configuración del Sistema"));
 
-        loadAndAplyThemeOnStartup();
-        loadCustomVariablesOnStartup();
+        loadCssVariablesFromLocalStorage();
 
-        // Selector de modo claro u obscuro
         RadioButtonGroup<String> themeSelector = createThemeSelector();
+        ComboBox<ColorOptions> primaryColor = createColorCombo(
+                "Color primario",
+                "--lumo-primary-color",
+                primaryColorOptions
+        );
 
-        // Selector de colores de texto primarios
-        ComboBox<ColorOption> primaryTextColorSelector = createPrimaryTextColorComboBox();
-        primaryTextColorSelector.setWidth("250px");
+        ComboBox<ColorOptions> primaryTextColor = createColorCombo(
+                "Color de textos",
+                "--lumo-primary-text-color",
+                primaryTextColorOptions
+        );
 
-        // Selector del color primario
-        ComboBox<ColorOption> primaryColorSelector = createPrimaryColorComboBox();
-        primaryColorSelector.setWidth("250px");
+        HorizontalLayout row1 = new HorizontalLayout(themeSelector);
+        HorizontalLayout row2 = new HorizontalLayout(primaryColor, primaryTextColor);
 
-        HorizontalLayout layout1 = new HorizontalLayout(themeSelector);
-        layout1.setWidthFull();
-
-        HorizontalLayout layout2 = new HorizontalLayout(primaryColorSelector, primaryTextColorSelector);
-        layout2.setWidthFull();
-
-        VerticalLayout layoutPadre = new VerticalLayout(layout1,layout2);
+        VerticalLayout layoutPadre = new VerticalLayout(row1, row2);
         layoutPadre.getStyle()
                 .set("border-radius", "10px")
-                .set("box-shadow", "0 4px 10px rgba(0, 0, 0, 0.2)");
+                .set("box-shadow", "0 4px 8px rgba(0, 0, 0, 0.2)");
+
         add(layoutPadre);
-    }
 
-    private ComboBox<ColorOption> createPrimaryColorComboBox() {
-        ComboBox<ColorOption> selector = new ComboBox<>();
-        selector.setLabel("Color primario");
-        selector.setItems(primaryColorOptions);
-        selector.setClearButtonVisible(false);
-        selector.setAllowCustomValue(false);
-
-        final String cssVariable = "--lumo-primary-color";
-
-        UI.getCurrent().getPage().executeJs(String.format("return localStorage.getItem('config:%s');", cssVariable))
-                .then(String.class, savedHex -> {
-                    ColorOption savedOption = primaryTextColorOptions.stream()
-                            .filter(opt -> opt.getHexValue().equalsIgnoreCase(savedHex))
-                            .findFirst()
-                            .orElse(primaryTextColorOptions.get(0));
-
-                    selector.setValue(savedOption);
-                });
-
-        selector.addValueChangeListener(event -> {
-            ColorOption selectedOption = event.getValue();
-            if (selectedOption != null) {
-                applyCssVariable(cssVariable, selectedOption.getHexValue());
-            }
-        });
-
-        selector.setRenderer(new ComponentRenderer<>(colorOption -> {
-            Div div = new Div();
-            div.setText(colorOption.getName());
-            div.getStyle().set("display", "flex")
-                    .set("align-items", "center");
-
-            Div colorSwatch = new Div();
-            colorSwatch.getStyle().set("background-color", colorOption.getHexValue())
-                    .set("width","15px")
-                    .set("height","15px")
-                    .set("border-radius","50%")
-                    .set("margin-right","10px")
-                    .set("border","1px solid var(--lumo-border-color)");
-
-            div.addComponentAsFirst(colorSwatch);
-            return div;
-        }));
-
-        return selector;
-    }
-
-    private ComboBox<ColorOption> createPrimaryTextColorComboBox() {
-        ComboBox<ColorOption> selector = new ComboBox<>();
-        selector.setLabel("Color de los textos");
-        selector.setItems(primaryTextColorOptions);
-        selector.setClearButtonVisible(false);
-        selector.setAllowCustomValue(false);
-
-        final String cssVariable = "--lumo-primary-text-color";
-
-        UI.getCurrent().getPage().executeJs(String.format("return localStorage.getItem('config:%s');", cssVariable))
-                .then(String.class, savedHex -> {
-                    ColorOption savedOption = primaryTextColorOptions.stream()
-                            .filter(opt -> opt.getHexValue().equalsIgnoreCase(savedHex))
-                            .findFirst()
-                            .orElse(primaryTextColorOptions.get(0));
-
-                    selector.setValue(savedOption);
-                });
-
-        selector.addValueChangeListener(event -> {
-            ColorOption selectedOption = event.getValue();
-            if (selectedOption != null) {
-                applyCssVariable(cssVariable, selectedOption.getHexValue());
-            }
-        });
-
-        selector.setRenderer(new ComponentRenderer<>(colorOption -> {
-            Div div = new Div();
-            div.setText(colorOption.getName());
-            div.getStyle().set("display", "flex")
-                    .set("align-items", "center");
-
-            Div colorSwatch = new Div();
-            colorSwatch.getStyle().set("background-color", colorOption.getHexValue())
-                    .set("width","15px")
-                    .set("height","15px")
-                    .set("border-radius","50%")
-                    .set("margin-right","10px")
-                    .set("border","1px solid var(--lumo-border-color)");
-
-            div.addComponentAsFirst(colorSwatch);
-            return div;
-        }));
-
-        return selector;
+        UI.getCurrent().getPage().executeJs("return true;")
+                .then(Boolean.class, ok -> initializing = false);
     }
 
     private RadioButtonGroup<String> createThemeSelector() {
-        RadioButtonGroup<String> themeSelector = new RadioButtonGroup<>();
-        themeSelector.setLabel("Modo de Interfaz (Tema)");
-        themeSelector.setItems("Claro (Predeterminado)", "Oscuro");
+        RadioButtonGroup<String> selector = new RadioButtonGroup<>("Modo de interfaz");
+        selector.setItems("Claro", "Oscuro");
 
-        String currentTheme = (String) VaadinSession.getCurrent().getAttribute(THEME_SESSION_KEY);
-        if ("dark".equals(currentTheme)) {
-            themeSelector.setValue("Oscuro");
-        } else {
-            themeSelector.setValue("Claro (Predeterminado)");
-        }
-
-        themeSelector.addValueChangeListener(event -> {
-            String selection = event.getValue();
-            String themeAttribute = selection.contains("Oscuro") ? "dark" : "";
-
-            applyTheme(themeAttribute);
-        });
-
-        return themeSelector;
-    }
-
-    private void applyTheme(String themeAttribute) {
-        String jsCommand = String.format("document.documentElement.setAttribute('theme', '%s');", themeAttribute);
-        String localStorageCommand = String.format("localStorage.setItem('%s', '%s');", THEME_LOCALSTORAGE_KEY, themeAttribute);
-
-        UI.getCurrent().getPage().executeJs(jsCommand + localStorageCommand);
-        VaadinSession.getCurrent().setAttribute(THEME_SESSION_KEY, themeAttribute.isEmpty() ? "light" : "dark");
-    }
-
-    private void loadAndAplyThemeOnStartup() {
-        String jsLoadCommand = String.format(
-                "const savedTheme = localStorage.getItem('%s');" +
-                        "if (savedTheme) { document.documentElement.setAttribute('theme', savedTheme); }" +
-                        "return savedTheme;",
-                THEME_LOCALSTORAGE_KEY
+        UI.getCurrent().getPage().executeJs(
+                "return localStorage.getItem($0)", THEME_LOCALSTORAGE_KEY
+        ).then(String.class, theme ->
+                selector.setValue("dark".equals(theme) ? "Oscuro" : "Claro")
         );
 
-        UI.getCurrent().getPage().executeJs(jsLoadCommand)
-                .then(String.class, savedTheme -> {
-                    if (savedTheme != null && !savedTheme.isEmpty()) {
-                        VaadinSession.getCurrent().setAttribute(THEME_SESSION_KEY, "dark");
-                    } else {
-                        VaadinSession.getCurrent().setAttribute(THEME_SESSION_KEY, "light");
-                    }
-                });
+        selector.addValueChangeListener(e -> {
+            if (initializing) return;
+
+            boolean dark = "Oscuro".equals(e.getValue());
+            UI.getCurrent().getPage().executeJs(
+                    dark
+                            ? "document.documentElement.setAttribute('theme','dark')"
+                            : "document.documentElement.removeAttribute('theme')"
+            );
+            UI.getCurrent().getPage().executeJs(
+                    "localStorage.setItem($0,$1)",
+                    THEME_LOCALSTORAGE_KEY,
+                    dark ? "dark" : "light"
+            );
+        });
+
+        return selector;
     }
 
-    public static class ColorOption {
+    private ComboBox<ColorOptions> createColorCombo(
+            String label,
+            String cssVariable,
+            List<ColorOptions> options
+    ) {
+        ComboBox<ColorOptions> combo = new ComboBox<>(label);
+        combo.setItems(options);
+        combo.setWidth("250px");
+        combo.setAllowCustomValue(false);
+
+        UI.getCurrent().getPage().executeJs(
+                "return localStorage.getItem($0)",
+                "config:" + cssVariable
+        ).then(String.class, saved -> {
+            options.stream()
+                    .filter(o -> o.getHexValue().equalsIgnoreCase(saved))
+                    .findFirst()
+                    .ifPresent(combo::setValue);
+        });
+
+        combo.addValueChangeListener(e -> {
+            if (initializing || e.getValue() == null) return;
+
+            applyCssVariable(cssVariable, e.getValue().getHexValue());
+        });
+
+        combo.setRenderer(colorRenderer());
+        return combo;
+    }
+
+    private void applyCssVariable(String variable, String value) {
+        UI.getCurrent().getPage().executeJs(
+                """
+                document.documentElement.style.setProperty($0,$1);
+                localStorage.setItem($2,$1);
+                """,
+                variable,
+                value,
+                "config:" + variable
+        );
+    }
+
+    private void loadCssVariablesFromLocalStorage() {
+        UI.getCurrent().getPage().executeJs(
+                """
+                ['--lumo-primary-color','--lumo-primary-text-color'].forEach(v=>{
+                    const val = localStorage.getItem('config:'+v);
+                    if(val) document.documentElement.style.setProperty(v,val);
+                });
+                """
+        );
+    }
+
+    private ComponentRenderer<Div, ColorOptions> colorRenderer() {
+        return new ComponentRenderer<>(opt -> {
+            Div wrapper = new Div();
+            wrapper.getStyle().set("display", "flex").set("align-items", "center");
+
+            Div dot = new Div();
+            dot.getStyle()
+                    .set("width", "14px")
+                    .set("height", "14px")
+                    .set("border-radius", "50%")
+                    .set("margin-right", "8px")
+                    .set("background-color", opt.getHexValue())
+                    .set("border", "1px solid var(--lumo-border-color)");
+
+            wrapper.add(dot);
+            wrapper.add(opt.getName());
+            return wrapper;
+        });
+    }
+
+    public static class ColorOptions {
         private final String name;
         private final String hexValue;
 
-        public ColorOption(String name, String hexValue) {
+        public ColorOptions(String name, String hexValue) {
             this.name = name;
             this.hexValue = hexValue;
         }
@@ -226,48 +188,8 @@ public class ConfiguracionDelSistema extends VerticalLayout {
         public String getHexValue() { return hexValue; }
 
         @Override
-        public String toString() { return name; }
-    }
-
-
-    private void applyCssVariable(String variableName, String colorValue) {
-        String jsSetVar = String.format(
-                "document.documentElement.style.setProperty('%s', '%s');",
-                variableName,
-                colorValue
-        );
-
-        String jsSetStorage = String.format(
-                "localStorage.setItem('config:%s', '%s');",
-                variableName,
-                colorValue
-        );
-
-        UI.getCurrent().getPage().executeJs(jsSetVar + jsSetStorage);
-        VaadinSession.getCurrent().setAttribute(variableName, colorValue);
-    }
-
-    private void loadCustomVariablesOnStartup() {
-        final String[] customVariables = {
-                "--lumo-primary-text-color",
-                "--lumo-primary-color"
-        };
-
-        StringBuilder jsLoadScript = new StringBuilder();
-
-        for (String cssVariable : customVariables) {
-            String storageKey = "config:" + cssVariable;
-
-            // Genera el código para leer y aplicar cada variable
-            jsLoadScript.append(String.format(
-                    "const saved_%1$s = localStorage.getItem('%2$s');" +
-                            "if (saved_%1$s) { document.documentElement.style.setProperty('%3$s', saved_%1$s); }",
-                    cssVariable.replace("-", "_"), // Crea un nombre de variable JS válido
-                    storageKey,
-                    cssVariable
-            ));
+        public String toString() {
+            return name;
         }
-
-        UI.getCurrent().getPage().executeJs(jsLoadScript.toString());
     }
 }

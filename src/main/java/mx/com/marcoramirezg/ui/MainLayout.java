@@ -1,6 +1,7 @@
 package mx.com.marcoramirezg.ui;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -11,6 +12,8 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import mx.com.marcoramirezg.entity.MenuItem;
@@ -24,7 +27,7 @@ import java.util.stream.Collectors;
 
 @SpringComponent
 @UIScope
-public class MainLayout extends AppLayout {
+public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
     private final MenuService menuService;
     private final Map<Long, List<MenuItem>> menuTree;
@@ -141,5 +144,17 @@ public class MainLayout extends AppLayout {
         }
 
         return item;
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+        UI.getCurrent().getPage().executeJs("""
+                const theme = localStorage.getItem('appThemePreference');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('theme');
+            }
+        """);
     }
 }
