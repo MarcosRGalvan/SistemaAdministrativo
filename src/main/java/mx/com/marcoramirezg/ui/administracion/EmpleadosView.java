@@ -8,6 +8,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -16,17 +17,28 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamRegistration;
+import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.server.streams.UploadHandler;
 import jakarta.annotation.security.RolesAllowed;
 import mx.com.marcoramirezg.dto.EmpleadoDTO;
 import mx.com.marcoramirezg.services.EmpleadoService;
 import mx.com.marcoramirezg.ui.MainLayout;
 import mx.com.marcoramirezg.ui.components.ToolbarComponent;
 
-import java.util.Date;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @PageTitle("Empleados")
 @Route(value = "empleados", layout = MainLayout.class)
@@ -42,11 +54,9 @@ public class EmpleadosView extends VerticalLayout {
     private TextField txtTitulo;
     private TextField txtDepartamento;
     private TextField txtJefe;
-    private Button btnListaUsuarios;
-    private Button btnLimpiar;
     private TextField txtEmail;
     private H2 label;
-    private Button btnBuscar;
+    private Image ftoEmpl;
 
     private static final DateFormat FORMATO_FECHA = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -70,16 +80,32 @@ public class EmpleadosView extends VerticalLayout {
     /* ---------------- TOOLBAR ---------------- */
 
     private Component createToolbar() {
-        btnListaUsuarios = new Button("Lista empleados", VaadinIcon.USER.create());
+        Button btnListaUsuarios = new Button("Lista empleados", VaadinIcon.USER.create());
         btnListaUsuarios.addClickListener(e -> mostrarListaEmpleados());
 
-        btnLimpiar = new Button("Limpiar", VaadinIcon.ERASER.create());
+        Button btnLimpiar = new Button("Limpiar", VaadinIcon.ERASER.create());
         btnLimpiar.addClickListener(e -> limpiarFormulario());
 
-        btnBuscar = new Button("Buscar", VaadinIcon.SEARCH.create());
+        Button btnBuscar = new Button("Buscar", VaadinIcon.SEARCH.create());
         btnBuscar.addClickListener(e -> buscarEmpleado());
 
-        return new ToolbarComponent(btnBuscar,btnLimpiar,btnListaUsuarios);
+        Button btnSubir = new Button("Subir Foto", VaadinIcon.CAMERA.create());
+        btnSubir.addClickListener(e -> abrirDialogoSubida());
+
+        ftoEmpl = new Image();
+        ftoEmpl.setVisible(false);
+        ftoEmpl.setHeight("120px");
+        ftoEmpl.setWidth("120px");
+
+        ftoEmpl.getStyle()
+                .set("top", "20px")
+                .set("right", "20px")
+                .set("border", "1px solid #ccc")
+                .set("border-radius", "8px")
+                .set("z-index", "10")
+                .set("position", "absolute");
+
+        return new ToolbarComponent(btnBuscar, btnLimpiar, btnListaUsuarios, btnSubir);
     }
 
     /* ---------------- CONTENIDO ---------------- */
@@ -120,11 +146,24 @@ public class EmpleadosView extends VerticalLayout {
         txtEmail = new TextField("Email");
         txtEmail.setWidthFull();
 
+        ftoEmpl.setHeight("150px");
+        ftoEmpl.setWidth("150px");
+        ftoEmpl.getStyle()
+                .set("top", "30px")
+                .set("right", "30px")
+                .set("border", "1px solid #ccc")
+                .set("border-radius", "8px")
+                .set("z-index", "10")
+                .set("position", "absolute");
+
+
         HorizontalLayout numemplLyt = new HorizontalLayout(txtNoEmpleado);
         numemplLyt.setWidthFull();
 
         HorizontalLayout nombreLyt = new HorizontalLayout(txtNombre, txtTitulo);
         nombreLyt.setWidthFull();
+        nombreLyt.setPadding(false);
+        txtNombre.setMaxWidth("50%");
 
         HorizontalLayout apellidosLyt = new HorizontalLayout(txtApPaterno, txtApMaterno);
         apellidosLyt.setWidthFull();
@@ -138,6 +177,7 @@ public class EmpleadosView extends VerticalLayout {
 
         VerticalLayout card = new VerticalLayout(
                 label = new H2("Buscar empleados"),
+                ftoEmpl,
                 numemplLyt,
                 nombreLyt,
                 apellidosLyt,
@@ -146,7 +186,9 @@ public class EmpleadosView extends VerticalLayout {
         );
 
         card.getStyle()
+                .set("position", "relative")
                 .set("border-radius", "10px")
+                .set("padding-right", "200px")
                 .set("box-shadow", "0 4px 10px rgba(0, 0, 0, 0.2)");
 
         return card;
@@ -185,15 +227,16 @@ public class EmpleadosView extends VerticalLayout {
 
     /* ---------------- LLENAMOS LOS CAMPOS DEL FORMULARIO ---------------- */
     private void llenarFormulario(EmpleadoDTO e) {
+
         txtNoEmpleado.setEnabled(false);
 
-        txtNombre.setValue(e.getNombre());
+        txtNombre.setValue(safeString(e.getNombre()));
         txtNombre.setReadOnly(true);
 
-        txtApPaterno.setValue(e.getApaterno());
+        txtApPaterno.setValue(safeString(e.getApaterno()));
         txtApPaterno.setReadOnly(true);
 
-        txtApMaterno.setValue(e.getAmaterno());
+        txtApMaterno.setValue(safeString(e.getAmaterno()));
         txtApMaterno.setReadOnly(true);
 
         txtTitulo.setValue(e.getTitulo());
@@ -205,14 +248,37 @@ public class EmpleadosView extends VerticalLayout {
         txtFechaBaja.setValue(formatearFecha(e.getFechabaja()));
         txtFechaBaja.setReadOnly(true);
 
-        txtDepartamento.setValue(e.getDepto());
+        txtDepartamento.setValue(safeString(e.getDepto()));
         txtDepartamento.setReadOnly(true);
 
-        txtEmail.setValue(e.getEmail());
+        txtEmail.setValue(safeString(e.getEmail()));
         txtEmail.setReadOnly(true);
 
-        txtJefe.setValue(e.getJefe());
+        txtJefe.setValue(safeString(e.getJefe()));
         txtJefe.setReadOnly(true);
+
+        System.out.println("DEBUG: Nombre de foto en DTO: " + e.getFotoNombre());
+
+        boolean fotoCargada = false;
+
+        if (e.getFotoNombre() != null && !e.getFotoNombre().isEmpty()) {
+            File file = new File(empleadoService.getRutaFotos() + e.getFotoNombre());
+            System.out.println("DEBUG: Buscando archivo en: " + file.getAbsolutePath());
+            System.out.println("DEBUG: ¿El archivo existe?: " + file.exists());
+
+            if (file.exists()) {
+                DownloadHandler handler = DownloadHandler.forFile(file);
+                StreamRegistration registration = VaadinSession.getCurrent()
+                                .getResourceRegistry()
+                                        .registerResource(handler);
+                ftoEmpl.setSrc(registration.getResourceUri().toString());
+                ftoEmpl.setVisible(true);
+                fotoCargada = true;
+                System.out.println("DEBUG: URI generada: " + registration.getResourceUri());
+            }
+        } else {
+            ftoEmpl.setVisible(false);
+        }
     }
 
 
@@ -261,6 +327,7 @@ public class EmpleadosView extends VerticalLayout {
         txtJefe.setReadOnly(false);
         txtEmail.clear();
         txtEmail.setReadOnly(false);
+        ftoEmpl.setVisible(false);
     }
 
     private void mostrarListaEmpleados() {
@@ -317,5 +384,70 @@ public class EmpleadosView extends VerticalLayout {
 
         dialog.add(grid);
         dialog.open();
+    }
+
+    private void abrirDialogoSubida() {
+        if (txtNoEmpleado.getValue() == null) {
+            mostrarNotificacion("Primero busca un empleado", NotificationVariant.LUMO_WARNING, VaadinIcon.WARNING);
+            return;
+        }
+
+        Long id = txtNoEmpleado.getValue().longValue();
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Subir foto");
+
+        // CORRECCIÓN: La lambda recibe un solo objeto (UploadHandler.UploadRequest)
+        UploadHandler handler = request -> {
+            try {
+                // Extraemos los datos del objeto request
+                String fileName = request.getFileName();
+                InputStream inputStream = request.getInputStream();
+
+                String extension = fileName.substring(fileName.lastIndexOf("."));
+                String nuevoNombre = "emp_" + id + extension;
+
+                Path directorio = Path.of(empleadoService.getRutaFotos());
+                // Aseguramos que la carpeta exista
+                if (!Files.exists(directorio)) {
+                    Files.createDirectories(directorio);
+                }
+
+                Path destino = directorio.resolve(nuevoNombre);
+
+                // Transferencia de flujo (Stream)
+                try (OutputStream outputStream = new FileOutputStream(destino.toFile())) {
+                    inputStream.transferTo(outputStream);
+                }
+
+                // Actualización segura de la UI
+                getUI().ifPresent(ui -> ui.access(() -> {
+                    empleadoService.guardarNombreFoto(id, nuevoNombre);
+                    buscarEmpleado();
+                    mostrarNotificacion("Foto Actualizada", NotificationVariant.LUMO_SUCCESS, VaadinIcon.CHECK);
+                    dialog.close();
+                }));
+
+            } catch (Exception ex) {
+                getUI().ifPresent(ui -> ui.access(() -> {
+                    mostrarNotificacion("Error al guardar: " + ex.getMessage(), NotificationVariant.LUMO_ERROR, VaadinIcon.CLOSE);
+                }));
+            }
+        };
+
+        Upload upload = new Upload(handler);
+        upload.setAcceptedFileTypes("image/jpeg", "image/png");
+        upload.setMaxFiles(1);
+        upload.setMaxFileSize(2 * 1024 * 1024); // 2MB
+
+        dialog.add(new VerticalLayout(new Text("Seleccione una imagen para el empleado " + id), upload));
+
+        // Asegúrate de usar un botón local si 'btnConfirmar' no existe fuera de aquí
+        Button btnCerrar = new Button("Cancelar", i -> dialog.close());
+        dialog.getFooter().add(btnCerrar);
+        dialog.open();
+    }
+
+    private String safeString(String value) {
+        return value == null ? "" : value;
     }
 }

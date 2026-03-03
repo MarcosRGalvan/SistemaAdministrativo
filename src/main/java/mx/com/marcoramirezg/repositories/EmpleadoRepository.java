@@ -23,7 +23,8 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
         	e.fechabaja,
         	CONCAT( j.nombre, ' ', j.apaterno, ' ', j.apmaterno),
         	t.descripcion,
-        	d.descripcion
+        	d.descripcion,
+            e.fotoNombre
         )
         FROM Empleado e
         JOIN e.tituloid t
@@ -45,7 +46,8 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
         e.fechabaja,
         CONCAT(j.nombre, ' ', j.apaterno, ' ', j.apmaterno),
         t.descripcion,
-        d.descripcion
+        d.descripcion,
+        e.fotoNombre
     )
     FROM Empleado e
     JOIN e.tituloid t

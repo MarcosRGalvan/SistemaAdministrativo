@@ -44,4 +44,7 @@ public class Empleado {
     @ManyToOne
     @JoinColumn(name = "JEFEID")
     private Empleado jefe;
+
+    @Column(name = "FOTONOMBRE")
+    private String fotoNombre;
 }

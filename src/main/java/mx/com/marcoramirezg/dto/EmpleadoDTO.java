@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Timestamp;
 import java.util.Date;
 
 @Getter @Setter
@@ -21,8 +20,12 @@ public class EmpleadoDTO {
     private String jefe;
     private String titulo;
     private String depto;
+    private String fotoNombre;
 
-    public EmpleadoDTO(Long empleadoid, String nombre,String apaterno, String amaterno, String email, Date fechaingreso, Date fechabaja, String jefe, String titulo, String depto) {
+    public EmpleadoDTO(Long empleadoid, String nombre,String apaterno, String amaterno,
+                       String email, Date fechaingreso, Date fechabaja, String jefe, String titulo,
+                       String depto, String fotoNombre) {
+
         this.empleadoid = empleadoid;
         this.nombre = nombre;
         this.apaterno = apaterno;
@@ -33,5 +36,6 @@ public class EmpleadoDTO {
         this.jefe = jefe;
         this.titulo = titulo;
         this.depto = depto;
+        this.fotoNombre = fotoNombre;
     }
 }
